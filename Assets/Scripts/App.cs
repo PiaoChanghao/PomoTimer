@@ -38,29 +38,33 @@ namespace PomoTimerApp
         private string mButtonText = "START";
 
         private Timer mTimer = null;
-        private Stopwatch mStopwatch = null;
+        private StopwatchTimer mStopwatch = null;
 
         public override void initState()
         {
             base.initState();
 
-            mStopwatch = new Stopwatch();
+            mStopwatch = new StopwatchTimer();
 
             mTimer = Window.instance.periodic(DELAY, () =>
             {
-                var minutes = (int)mStopwatch.Elapsed.TotalMinutes;
+                var minutes = (int)mStopwatch.TotalMinutes;
 
                 if (minutes == 25)
                 {
                     Debug.Log("到达25分钟");
+                    this.setState(() => { mTimeText = "00:00"; });
+                    mStopwatch.Stop();
                     return;
                 }
 
 
+                var minutesText = (25 - mStopwatch.Minutes - 1).ToString().PadLeft(2, '0');
+                var secondsText = (60 - mStopwatch.Seconds - 1).ToString().PadLeft(2, '0');
 
-                Debug.LogFormat("   DELAYED:{0}", mStopwatch.Elapsed.TotalSeconds);
+                Debug.LogFormat("   DELAYED:{0}", mStopwatch.TotalSeconds);
 
-                mTimeText = $"{24 - mStopwatch.Elapsed.Minutes}:{59 - mStopwatch.Elapsed.Seconds}";
+                mTimeText = $"{minutesText}:{secondsText}";
 
                 if (mStopwatch.IsRunning)
                 {
@@ -69,7 +73,7 @@ namespace PomoTimerApp
                         mButtonText = "RUNNING";
                     });
                 }
-                else if ((int)mStopwatch.Elapsed.TotalSeconds == 0)
+                else if ((int)mStopwatch.TotalSeconds == 0)
                 {
                     this.setState(() => { mTimeText = "25:00"; });
 
@@ -96,19 +100,35 @@ namespace PomoTimerApp
                     children: new List<Widget>()
                     {
                         new Align(
+                            alignment:Alignment.topCenter,
+                            child:new Container(
+                                margin:EdgeInsets.only(top:100),
+                                child:new Column(
+                                    mainAxisSize:Unity.UIWidgets.rendering.MainAxisSize.max,
+                                    children:new List<Widget>()
+                                    {
+                                    new Text("课程制作",style:new TextStyle(
+                                    color:Colors.grey,
+                                    fontSize:30
+                                    ))
+                                    }
+                                    )
+                                )
+                        ),
+                        new Align(
                     alignment: Alignment.center,
                     child: new Text(mTimeText, style: new TextStyle(
-                    color: Colors.black,
-                    fontSize: 54,
-                    fontWeight: FontWeight.bold
-                )
-                    )),
+                        color: Colors.black,
+                        fontSize: 54,
+                        fontWeight: FontWeight.bold
+                        ))
+                    ),
                         new Align(
-                            alignment:Alignment.bottomCenter,
-                            child:new Container(
-                                margin:EdgeInsets.only(bottom:32),
-                                child:new GestureDetector(
-                                    child:new RoundedButton(mButtonText),
+                            alignment: Alignment.bottomCenter,
+                            child: new Container(
+                                margin: EdgeInsets.only(bottom: 32),
+                                child: new GestureDetector(
+                                    child: new RoundedButton(mButtonText),
                                     onTap: () =>
                                     {
                                         if (mStopwatch.IsRunning)
